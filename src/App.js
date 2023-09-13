@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
 import "./style.css";
-import Logo from "./logo_tarteel.png";
+import Logo from "./logo.svg";
 
 
-// Set for Tartee
+// Set for FIP
 const sets = {
-  "A1": {
-    ajza: "1 Juz (1)",
-    startPage: 3,
-    endPage: 21
+  "A28": {
+    ajza: "1 Juz (28)",
+    startPage: 542,
+    endPage: 561
   },
-  "A2": {
+  "A29": {
+    ajza: "1 Juz (29)",
+    startPage: 562,
+    endPage: 581
+  },
+  "A30": {
     ajza: "1 Juz (30)",
     startPage: 582,
     endPage: 604
-  },
-  "B0": {
-    ajza: "2.5 Ajza",
-    startPage: 3,
-    endPage: 53
   },
   "B1": {
     ajza: "3 Ajza (1 - 3)",
@@ -31,44 +31,34 @@ const sets = {
     endPage: 604
   },
   "C1": {
-    ajza: "5 Ajza (1 - 5)",
+    ajza: "6 Ajza (1 - 6)",
     startPage: 3,
     endPage: 101
   },
   "C2": {
-    ajza: "5 Ajza (26 - 30)",
-    startPage: 502,
-    endPage: 589
+    ajza: "6 Ajza (25 - 30)",
+    startPage: 482,
+    endPage: 604
   },
   "D1": {
-    ajza: "10 Ajza (1 - 10)",
-    startPage: 3,
-    endPage: 200
-  },
-  "D2": {
-    ajza: "10 Ajza (20 - 30)",
-    startPage: 382,
-    endPage: 589
-  },
-  "E1": {
     ajza: "15 Ajza (1 - 15)",
     startPage: 3,
     endPage: 281
   },
-  "E2": {
+  "D2": {
     ajza: "15 Ajza (16 - 30)",
     startPage: 302,
-    endPage: 589
+    endPage: 604
   },
-  "F": {
+  "E": {
     ajza: "Whole Quran",
     startPage: 3,
-    endPage: 589
+    endPage: 604
   }
 };
 
 const App = () => {
-  const [setSelected, setSetSelected] = useState("A1");
+  const [setSelected, setSetSelected] = useState("A28");
   const [resultPageNumber, setResultPageNumber] = useState("");
   const [outOfPageNumbers, setOutOfPageNumbers] = useState(false);
   const [animatedCounter, setAnimatedCounter] = useState([]);
