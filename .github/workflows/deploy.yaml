@@ -19,6 +19,9 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: List build contents
+        run: ls -la build/
+
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -26,6 +29,6 @@ jobs:
             username: ${{ secrets.SFTP_USERNAME }}
             password: ${{ secrets.SFTP_PASSWORD }}
             port: ${{ secrets.SFTP_PORT }}
-            local_path: './build'
+            local_path: './build/*'
             remote_path: './fip/generator'
             sftp_only: true
