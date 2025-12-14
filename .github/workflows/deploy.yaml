@@ -19,6 +19,26 @@ jobs:
       - name: Build project
         run: npm run build
 
+        - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Clean and recreate remote directory
+        run: |
+          sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} << 'ENDSSH'
+          # Remove directory if it exists
+          if [ -d "./fip/generator" ]; then
+            echo "Directory exists, deleting..."
+            rm -rf /fip/generator
+          else
+            echo "Directory does not exist"
+          fi
+          # Create directory (will create parent directories if needed)
+          echo "Creating generator directory..."
+          mkdir -p /fip/generator
+          echo "Directory ready for deployment"
+          ENDSSH
+
+
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
