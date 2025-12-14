@@ -27,5 +27,5 @@ jobs:
             password: ${{ secrets.SFTP_PASSWORD }}
             port: ${{ secrets.SFTP_PORT }}
             local_path: './build'
-            remote_path: './fip/page-generator'
+            remote_path: './fip/generator'
             sftp_only: true
