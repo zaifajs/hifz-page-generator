@@ -19,33 +19,13 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-
-      - name: Clean and recreate remote directory
-        run: |
-          sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} << 'ENDSSH'
-          # Remove directory if it exists
-          if [ -d "/home/fip/htdocs/hifz-competition.org/fip/generator" ]; then
-            echo "Directory exists, deleting..."
-            rm -rf /home/fip/htdocs/hifz-competition.org/fip/generator
-          else
-            echo "Directory does not exist"
-          fi
-          # Create directory (will create parent directories if needed)
-          echo "Creating generator directory..."
-          mkdir -p /home/fip/htdocs/hifz-competition.org/fip/generator
-          echo "Directory ready for deployment"
-          ENDSSH
-
-
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-            server: ${{ secrets.SFTP_SERVER }}
-            username: ${{ secrets.SFTP_USERNAME }}
-            password: ${{ secrets.SFTP_PASSWORD }}
-            port: ${{ secrets.SFTP_PORT }}
-            local_path: './build'
-            remote_path: '/home/fip/htdocs/hifz-competition.org/fip/generator'
-            sftp_only: true
+          server: ${{ secrets.SFTP_SERVER }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT }}
+          local_path: './build/*'
+          remote_path: 'fip/generator'
+          sftp_only: true
