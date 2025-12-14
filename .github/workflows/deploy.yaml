@@ -40,34 +40,31 @@ jobs:
           echo "Directory ready for deployment"
           ENDSSH
 
-      - name: Upload files via SFTP
-        run: |
-          echo "Listing build directory contents:"
-          ls -la build/
-          echo ""
-          
-          # Create SFTP batch file to upload all files and directories recursively
-          cat > /tmp/sftp_commands.txt << 'EOF'
-          cd ./fip/generator
-          lcd build
-          put -r * .
-          quit
-          EOF
-          
-          # Upload files
-          echo "Starting SFTP upload..."
-          sshpass -p "${{ secrets.SFTP_PASSWORD }}" sftp -b /tmp/sftp_commands.txt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }}
-          echo "Upload completed"
+      - name: Upload via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+            server: ${{ secrets.SFTP_SERVER }}
+            username: ${{ secrets.SFTP_USERNAME }}
+            password: ${{ secrets.SFTP_PASSWORD }}
+            port: ${{ secrets.SFTP_PORT }}
+            local_path: './build'
+            remote_path: './fip/generator'
+            sftp_only: false
 
-      - name: Verify uploaded files
+      - name: Move files to correct location
         run: |
           sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} << 'ENDSSH'
-          echo "=== Files in ./fip/generator ==="
-          ls -la ./fip/generator/ || echo "Directory is empty or doesn't exist"
+          # If files were uploaded to ./fip/generator/build, move them up
+          if [ -d "./fip/generator/build" ]; then
+            echo "Moving files from ./fip/generator/build to ./fip/generator/"
+            mv ./fip/generator/build/* ./fip/generator/ 2>/dev/null || true
+            mv ./fip/generator/build/.* ./fip/generator/ 2>/dev/null || true
+            rmdir ./fip/generator/build
+            echo "Files moved successfully"
+          fi
+          echo "=== Final directory contents ==="
+          ls -la ./fip/generator/
           echo ""
           echo "=== File count ==="
           find ./fip/generator -type f | wc -l
-          echo ""
-          echo "=== Directory structure ==="
-          find ./fip/generator -type f | head -10
           ENDSSH
