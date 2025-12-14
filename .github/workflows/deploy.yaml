@@ -19,7 +19,7 @@ jobs:
       - name: Build project
         run: npm run build
 
-        - name: Install sshpass
+      - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Clean and recreate remote directory
