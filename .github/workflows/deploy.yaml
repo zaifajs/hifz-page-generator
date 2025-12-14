@@ -35,16 +35,39 @@ jobs:
           # Create directory (will create parent directories if needed)
           echo "Creating generator directory..."
           mkdir -p ./fip/generator
+          echo "Verifying directory was created..."
+          ls -la ./fip/ | grep generator || echo "WARNING: Directory creation may have failed"
           echo "Directory ready for deployment"
           ENDSSH
 
-      - name: Upload via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-            server: ${{ secrets.SFTP_SERVER }}
-            username: ${{ secrets.SFTP_USERNAME }}
-            password: ${{ secrets.SFTP_PASSWORD }}
-            port: ${{ secrets.SFTP_PORT }}
-            local_path: './build'
-            remote_path: './fip/generator'
-            sftp_only: true
+      - name: Upload files via SFTP
+        run: |
+          echo "Listing build directory contents:"
+          ls -la build/
+          echo ""
+          
+          # Create SFTP batch file to upload all files and directories recursively
+          cat > /tmp/sftp_commands.txt << 'EOF'
+          cd ./fip/generator
+          lcd build
+          put -r * .
+          quit
+          EOF
+          
+          # Upload files
+          echo "Starting SFTP upload..."
+          sshpass -p "${{ secrets.SFTP_PASSWORD }}" sftp -b /tmp/sftp_commands.txt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }}
+          echo "Upload completed"
+
+      - name: Verify uploaded files
+        run: |
+          sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p ${{ secrets.SFTP_PORT }} ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} << 'ENDSSH'
+          echo "=== Files in ./fip/generator ==="
+          ls -la ./fip/generator/ || echo "Directory is empty or doesn't exist"
+          echo ""
+          echo "=== File count ==="
+          find ./fip/generator -type f | wc -l
+          echo ""
+          echo "=== Directory structure ==="
+          find ./fip/generator -type f | head -10
+          ENDSSH
