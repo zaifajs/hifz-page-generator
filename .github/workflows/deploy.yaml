@@ -3,7 +3,17 @@ name: Upload via SFTP
 on:
   push:
     branches:
+      - main
       - fip
+      - habib
+      - jkbw
+      - tarteel
+      - ahlul-quran
+  workflow_dispatch:
+
+env:
+  SITE_USER: rawdah-hifz
+  DOMAIN: hifz.rawdah.app
 
 jobs:
   deploy:
@@ -13,22 +23,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Resolve target folder from branch
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          # main is the legacy branch — it deploys to /fip/generator/
+          if [ "$BRANCH" = "main" ]; then
+            PARENT="fip"
+          else
+            PARENT="$BRANCH"
+          fi
+          echo "PARENT=$PARENT" >> $GITHUB_ENV
+          echo "PUBLIC_URL=/$PARENT/generator" >> $GITHUB_ENV
+          echo "Deploying branch '$BRANCH' to /$PARENT/generator/"
+
       - name: Install dependencies
         run: npm i
 
       - name: Build project
         run: npm run build
+        env:
+          PUBLIC_URL: ${{ env.PUBLIC_URL }}
 
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Ensure remote directory exists
+      - name: Reset remote generator directory
         run: |
           sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh \
             -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             -p ${{ secrets.SFTP_PORT }} \
             ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} \
-            "rm -rf /home/fip/htdocs/hifz-competition.org/fip/generator && mkdir -p /home/fip/htdocs/hifz-competition.org/fip/generator"
+            "rm -rf /home/${SITE_USER}/htdocs/${DOMAIN}/${PARENT}/generator && mkdir -p /home/${SITE_USER}/htdocs/${DOMAIN}/${PARENT}/generator"
 
       - name: Upload via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
@@ -38,5 +63,13 @@ jobs:
           password: ${{ secrets.SFTP_PASSWORD }}
           port: ${{ secrets.SFTP_PORT }}
           local_path: './build/*'
-          remote_path: 'fip/generator/'
+          remote_path: '/home/rawdah-hifz/htdocs/hifz.rawdah.app/${{ env.PARENT }}/generator/'
           sftp_only: true
+
+      - name: Fix ownership
+        run: |
+          sshpass -p "${{ secrets.SFTP_PASSWORD }}" ssh \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            -p ${{ secrets.SFTP_PORT }} \
+            ${{ secrets.SFTP_USERNAME }}@${{ secrets.SFTP_SERVER }} \
+            "chown -R ${SITE_USER}:${SITE_USER} /home/${SITE_USER}/htdocs/${DOMAIN}/${PARENT}/generator"
